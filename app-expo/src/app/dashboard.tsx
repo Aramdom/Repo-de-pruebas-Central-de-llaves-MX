@@ -24,7 +24,7 @@ export default function DashboardScreen() {
         </View>
 
         {/* Action Cards */}
-        <TouchableOpacity style={styles.actionCard} activeOpacity={0.7}>
+        <TouchableOpacity style={styles.actionCard} activeOpacity={0.7} onPress={() => router.push('/tickets')}>
           <View style={[styles.iconContainer, { backgroundColor: '#E0E7FF' }]}>
             <Ionicons name="car-outline" size={24} color="#00628F" />
           </View>
@@ -34,7 +34,7 @@ export default function DashboardScreen() {
           </View>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.actionCard} activeOpacity={0.7}>
+        <TouchableOpacity style={styles.actionCard} activeOpacity={0.7} onPress={() => router.push('/location')}>
           <View style={[styles.iconContainer, { backgroundColor: '#D1FAE5' }]}>
             <Ionicons name="time-outline" size={24} color="#047857" />
           </View>

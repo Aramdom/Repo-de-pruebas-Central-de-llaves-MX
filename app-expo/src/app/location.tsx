@@ -10,7 +10,7 @@ export default function LocationScreen() {
 
   const handleContinue = () => {
     if (selectedLocation) {
-      router.replace('/dashboard');
+      router.replace('/register-point');
     }
   };
 
