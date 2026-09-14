@@ -11,7 +11,7 @@ export default function LoginScreen() {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   const handleLogin = () => {
-    router.replace('/location');
+    router.replace('/dashboard');
   };
 
   return (
@@ -166,7 +166,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#111827',
     height: '100%',
-    outlineStyle: 'none',
   },
   eyeIconContainer: {
     padding: 8,

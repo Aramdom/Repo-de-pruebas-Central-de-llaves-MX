@@ -44,6 +44,16 @@ export default function DashboardScreen() {
           </View>
         </TouchableOpacity>
 
+        <TouchableOpacity style={styles.actionCard} activeOpacity={0.7} onPress={() => router.push('/new-client')}>
+          <View style={[styles.iconContainer, { backgroundColor: '#FEF3C7' }]}>
+            <Ionicons name="person-add-outline" size={24} color="#D97706" />
+          </View>
+          <View style={styles.actionTextContainer}>
+            <Text style={styles.actionTitle}>Registrar Cliente</Text>
+            <Text style={styles.actionDesc}>Agrega un nuevo cliente a la{'\n'}base de datos del sistema.</Text>
+          </View>
+        </TouchableOpacity>
+
         {/* Recent Activity Section */}
         <View style={styles.recentSection}>
           <Text style={styles.sectionTitle}>Actividad reciente</Text>
