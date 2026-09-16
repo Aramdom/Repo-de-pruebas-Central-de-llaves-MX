@@ -3,6 +3,9 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
+import { useForm, Controller } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 
 type TabType = 'agregar' | 'seleccion';
 
@@ -15,28 +18,46 @@ const MOCK_CLIENTS = [
   { id: '6', name: 'Elena Gómez', phone: '555-000-1111' },
 ];
 
+const clientSchema = z.object({
+  name: z.string().min(3, 'El nombre debe tener al menos 3 caracteres'),
+  phone: z.string().min(10, 'Debe tener al menos 10 dígitos').regex(/^[0-9]+$/, 'Solo se permiten números'),
+  email: z.string().email('Formato de correo inválido').or(z.literal('')).optional(),
+});
+
+type ClientForm = z.infer<typeof clientSchema>;
+
 export default function NewClientScreen() {
   const router = useRouter();
   
   // Tab State
   const [activeTab, setActiveTab] = useState<TabType>('agregar');
 
-  // "Agregar" State
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [email, setEmail] = useState('');
+  // "Agregar" State with React Hook Form
+  const { control, handleSubmit, formState: { errors, isValid } } = useForm<ClientForm>({
+    resolver: zodResolver(clientSchema),
+    mode: 'onChange', // Valida en cada cambio para habilitar el botón
+    defaultValues: {
+      name: '',
+      phone: '',
+      email: '',
+    }
+  });
 
   // "Selección" State
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
 
-  const isFormValid = name.trim().length > 0 && phone.trim().length > 0;
+  const isFormValid = isValid;
   const isSelectionValid = selectedClientId !== null;
 
-  const handleSave = () => {
-    if (activeTab === 'agregar' && isFormValid) {
-      router.back();
-    } else if (activeTab === 'seleccion' && isSelectionValid) {
+  const onSaveNewClient = (data: ClientForm) => {
+    // Aquí enviarías los datos al backend
+    console.log('Nuevo cliente:', data);
+    router.back();
+  };
+
+  const handleSaveSelection = () => {
+    if (activeTab === 'seleccion' && isSelectionValid) {
       const selectedClient = MOCK_CLIENTS.find(c => c.id === selectedClientId);
       if (selectedClient) {
         router.push({
@@ -91,49 +112,74 @@ export default function NewClientScreen() {
           {activeTab === 'agregar' ? (
             // AGREGAR VIEW
             <View style={styles.card}>
+              
               <View style={styles.fieldContainer}>
                 <Text style={styles.label}>NOMBRE COMPLETO</Text>
-                <View style={styles.inputWrapper}>
+                <View style={[styles.inputWrapper, errors.name && styles.inputError]}>
                   <Ionicons name="person-outline" size={18} color="#6B7280" style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Ingresa el nombre completo"
-                    placeholderTextColor="#9CA3AF"
-                    value={name}
-                    onChangeText={setName}
+                  <Controller
+                    control={control}
+                    name="name"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Ingresa el nombre completo"
+                        placeholderTextColor="#9CA3AF"
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                      />
+                    )}
                   />
                 </View>
+                {errors.name && <Text style={styles.errorText}>{errors.name.message}</Text>}
               </View>
 
               <View style={styles.fieldContainer}>
                 <Text style={styles.label}>TELÉFONO CELULAR</Text>
-                <View style={styles.inputWrapper}>
+                <View style={[styles.inputWrapper, errors.phone && styles.inputError]}>
                   <Ionicons name="call-outline" size={18} color="#6B7280" style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Ingresa el teléfono celular"
-                    placeholderTextColor="#9CA3AF"
-                    keyboardType="phone-pad"
-                    value={phone}
-                    onChangeText={setPhone}
+                  <Controller
+                    control={control}
+                    name="phone"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Ingresa el teléfono celular"
+                        placeholderTextColor="#9CA3AF"
+                        keyboardType="phone-pad"
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                      />
+                    )}
                   />
                 </View>
+                {errors.phone && <Text style={styles.errorText}>{errors.phone.message}</Text>}
               </View>
 
               <View style={styles.fieldContainer}>
                 <Text style={styles.label}>CORREO ELECTRÓNICO <Text style={styles.labelOptional}>(Opcional)</Text></Text>
-                <View style={styles.inputWrapper}>
+                <View style={[styles.inputWrapper, errors.email && styles.inputError]}>
                   <Ionicons name="mail-outline" size={18} color="#6B7280" style={styles.inputIcon} />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Ingresa el correo electrónico"
-                    placeholderTextColor="#9CA3AF"
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    value={email}
-                    onChangeText={setEmail}
+                  <Controller
+                    control={control}
+                    name="email"
+                    render={({ field: { onChange, onBlur, value } }) => (
+                      <TextInput
+                        style={styles.input}
+                        placeholder="Ingresa el correo electrónico"
+                        placeholderTextColor="#9CA3AF"
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        onBlur={onBlur}
+                        onChangeText={onChange}
+                        value={value}
+                      />
+                    )}
                   />
                 </View>
+                {errors.email && <Text style={styles.errorText}>{errors.email.message}</Text>}
               </View>
             </View>
           ) : (
@@ -165,7 +211,7 @@ export default function NewClientScreen() {
           {activeTab === 'agregar' ? (
             <TouchableOpacity 
               style={[styles.actionButton, isFormValid ? styles.actionButtonActive : {}]} 
-              onPress={handleSave}
+              onPress={handleSubmit(onSaveNewClient)}
               disabled={!isFormValid}
               activeOpacity={0.8}
             >
@@ -174,7 +220,7 @@ export default function NewClientScreen() {
           ) : (
             <TouchableOpacity 
               style={[styles.actionButton, isSelectionValid ? styles.actionButtonActive : {}]} 
-              onPress={handleSave}
+              onPress={handleSaveSelection}
               disabled={!isSelectionValid}
               activeOpacity={0.8}
             >
@@ -303,6 +349,17 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     height: 48,
     paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  inputError: {
+    borderColor: '#EF4444',
+    backgroundColor: '#FEF2F2',
+  },
+  errorText: {
+    color: '#EF4444',
+    fontSize: 12,
+    marginTop: 4,
   },
   inputIcon: {
     marginRight: 10,
@@ -312,7 +369,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#111827',
     height: '100%',
-
   },
   listContainer: {
     marginBottom: 32,

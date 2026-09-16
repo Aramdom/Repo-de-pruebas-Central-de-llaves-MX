@@ -3,14 +3,32 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { StatusBar } from 'expo-status-bar';
+import { useForm, Controller } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+const loginSchema = z.object({
+  username: z.string().min(1, 'El usuario es obligatorio'),
+  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
+});
+
+type LoginForm = z.infer<typeof loginSchema>;
 
 export default function LoginScreen() {
   const router = useRouter();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
-  const handleLogin = () => {
+  const { control, handleSubmit, formState: { errors } } = useForm<LoginForm>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      username: '',
+      password: '',
+    }
+  });
+
+  const onSubmit = (data: LoginForm) => {
+    // Aquí podrías enviar 'data' a tu backend
+    console.log('Form data:', data);
     router.replace('/dashboard');
   };
 
@@ -34,17 +52,25 @@ export default function LoginScreen() {
           {/* Username Field */}
           <View style={styles.fieldContainer}>
             <Text style={styles.label}>USUARIO</Text>
-            <View style={styles.inputWrapper}>
+            <View style={[styles.inputWrapper, errors.username && styles.inputError]}>
               <Ionicons name="person-outline" size={18} color="#6B7280" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="ej. JuanPerez88"
-                placeholderTextColor="#9CA3AF"
-                value={username}
-                onChangeText={setUsername}
-                autoCapitalize="none"
+              <Controller
+                control={control}
+                name="username"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={styles.input}
+                    placeholder="ej. JuanPerez88"
+                    placeholderTextColor="#9CA3AF"
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                    value={value}
+                    autoCapitalize="none"
+                  />
+                )}
               />
             </View>
+            {errors.username && <Text style={styles.errorText}>{errors.username.message}</Text>}
           </View>
 
           {/* Password Field */}
@@ -55,24 +81,32 @@ export default function LoginScreen() {
                 <Text style={styles.forgotPasswordText}>¿OLVIDASTE LA CLAVE?</Text>
               </TouchableOpacity>
             </View>
-            <View style={styles.inputWrapper}>
+            <View style={[styles.inputWrapper, errors.password && styles.inputError]}>
               <Ionicons name="lock-closed-outline" size={18} color="#6B7280" style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                placeholder="••••••••"
-                placeholderTextColor="#9CA3AF"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!isPasswordVisible}
+              <Controller
+                control={control}
+                name="password"
+                render={({ field: { onChange, onBlur, value } }) => (
+                  <TextInput
+                    style={styles.input}
+                    placeholder="••••••••"
+                    placeholderTextColor="#9CA3AF"
+                    onBlur={onBlur}
+                    onChangeText={onChange}
+                    value={value}
+                    secureTextEntry={!isPasswordVisible}
+                  />
+                )}
               />
               <TouchableOpacity onPress={() => setIsPasswordVisible(!isPasswordVisible)} style={styles.eyeIconContainer}>
                 <Ionicons name={isPasswordVisible ? "eye-outline" : "eye-off-outline"} size={18} color="#6B7280" />
               </TouchableOpacity>
             </View>
+            {errors.password && <Text style={styles.errorText}>{errors.password.message}</Text>}
           </View>
 
           {/* Login Button */}
-          <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
+          <TouchableOpacity style={styles.loginButton} onPress={handleSubmit(onSubmit)}>
             <Text style={styles.loginButtonText}>Ingresar</Text>
             <Ionicons name="arrow-forward" size={18} color="#FFFFFF" style={styles.buttonIcon} />
           </TouchableOpacity>
@@ -157,6 +191,17 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     height: 48,
     paddingHorizontal: 12,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  inputError: {
+    borderColor: '#EF4444',
+    backgroundColor: '#FEF2F2',
+  },
+  errorText: {
+    color: '#EF4444',
+    fontSize: 12,
+    marginTop: 4,
   },
   inputIcon: {
     marginRight: 10,
